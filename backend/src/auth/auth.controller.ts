@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    HttpCode,
     Post,
     Req,
     UseGuards,
@@ -20,12 +21,14 @@ export class AuthController {
     ) {}
 
     @Post('sign-up')
+    @HttpCode(201)
     @UsePipes(new ZodValidationPipe(authUserSchema))
     async SignUp(@Body() user: AuthUserSchemaTypes) {
         return await this.userService.create(user);
     }
 
     @Post('sign-in')
+    @HttpCode(201)
     @UsePipes(new ZodValidationPipe(authUserSchema))
     async SignIn(@Body() user: AuthUserSchemaTypes) {
         return await this.authService.signIn(user);
@@ -33,6 +36,7 @@ export class AuthController {
 
     @UseGuards(RefreshJwtGuard)
     @Post('refresh')
+    @HttpCode(201)
     async refreshToken(@Req() req) {
         return await this.authService.refreshToken(req);
     }

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, buttonVariants } from "src/components/shadcn/ui/button";
 import {
     Form,
@@ -14,8 +14,14 @@ import { Input } from "src/components/shadcn/ui/input";
 import { cn } from "src/utils/utils";
 import { signInSchema, SignInValues, signUpSchema } from "src/validation/auth";
 import { z } from "zod";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useSignUp } from "src/store/mutations/useSignUp";
 
 const SignUpForm = () => {
+    const navigate = useNavigate();
+    const mutation = useSignUp();
+
     const form = useForm<z.infer<typeof signUpSchema>>({
         resolver: zodResolver(signInSchema),
         defaultValues: {
@@ -24,7 +30,16 @@ const SignUpForm = () => {
         },
     });
 
-    const onSubmitHandler = async (values: SignInValues) => {};
+    const onSubmitHandler = async (values: SignInValues) => {
+        return mutation.mutate(values, {
+            onSuccess: async () => {
+                navigate("/auth/sign-in");
+            },
+            onError: async (err: any) => {
+                toast.error(err.message);
+            },
+        });
+    };
 
     return (
         <Form {...form}>
@@ -59,8 +74,15 @@ const SignUpForm = () => {
                         </FormItem>
                     )}
                 />
-                <Button className="w-full" type="submit">
+                <Button
+                    className="w-full"
+                    type="submit"
+                    disabled={mutation.isPending}
+                >
                     Sign Up
+                    {mutation.isPending && (
+                        <Loader2 className="ml-3 size-4 animate-spin" />
+                    )}
                 </Button>
                 <Link
                     className={cn(

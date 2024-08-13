@@ -1,7 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button, buttonVariants } from "src/components/shadcn/ui/button";
 import {
     Form,
@@ -12,11 +13,17 @@ import {
     FormMessage,
 } from "src/components/shadcn/ui/form";
 import { Input } from "src/components/shadcn/ui/input";
+import { useAuth } from "src/providers/AuthProvider";
+import { useSignIn } from "src/store/mutations/useSignIn";
 import { cn } from "src/utils/utils";
 import { signInSchema, SignInValues } from "src/validation/auth";
 import { z } from "zod";
 
 const SignInForm = () => {
+    const navigate = useNavigate();
+    const mutation = useSignIn();
+    const { setUserIdHandler, setTokenHandler } = useAuth();
+
     const form = useForm<z.infer<typeof signInSchema>>({
         resolver: zodResolver(signInSchema),
         defaultValues: {
@@ -25,7 +32,18 @@ const SignInForm = () => {
         },
     });
 
-    const onSubmitHandler = async (values: SignInValues) => {};
+    const onSubmitHandler = async (values: SignInValues) => {
+        return mutation.mutate(values, {
+            onSuccess: async (data) => {
+                setTokenHandler(data.tokens.accessToken);
+                setUserIdHandler(data.user.id.toString());
+                navigate("/");
+            },
+            onError: async (err) => {
+                toast.error(err.message);
+            },
+        });
+    };
 
     return (
         <Form {...form}>
@@ -60,8 +78,15 @@ const SignInForm = () => {
                         </FormItem>
                     )}
                 />
-                <Button className="w-full" type="submit">
+                <Button
+                    className="w-full"
+                    type="submit"
+                    disabled={mutation.isPending}
+                >
                     Sign In
+                    {mutation.isPending && (
+                        <Loader2 className="ml-3 size-4 animate-spin" />
+                    )}
                 </Button>
                 <Link
                     className={cn(
