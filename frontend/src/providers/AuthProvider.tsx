@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const setUserIdHandler = (id: string) => {
-        setUserId(token);
+        setUserId(id);
         localStorage.setItem("userId", id);
         return;
     };
